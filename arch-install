@@ -14,7 +14,7 @@ time_zone="Europe/London"
 user_groups="adm,storage,optical,audio,video,network,wheel,power,lp,log"
 user_name="archuser"
 root_passwd="password"
-host_name="archlinux
+host_name="archlinux"
 pkgs="syslinux"
 keymap="KEYMAP=uk"
 locale="en_GB.UTF-8"
