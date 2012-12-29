@@ -1,0 +1,58 @@
+#!/bin/bash
+# arch-install - minimal Arch Linux installer based on arch-install-scripts
+# assumes you have created partitions, filesystems & are they are mounted to new_arch
+# 
+# by Mr Green
+#
+#
+
+new_arch=/mnt
+ACM="arch-chroot /mnt"
+
+# Set up system variables
+time_zone="Europe/London"
+user_groups="adm,storage,optical,audio,video,network,wheel,power,lp,log"
+user_name="archuser"
+root_passwd="password"
+host_name="archlinux
+pkgs="syslinux"
+keymap="KEYMAP=uk"
+locale="en_GB.UTF-8"
+
+# Install required packages
+base_install()
+{
+pacstrap ${new_arch} base ${pkgs}
+}
+
+# configure system
+system_conf()
+{
+new_etc="${new_arch}/etc"
+genfstab -p -U ${new_arch} >> ${new_etc}/fstab
+ln -s ${new_arch}/usr/share/zoneinfo/${time_zone} ${new_etc}/localtime
+echo ${host_name} > ${new_etc}/hostname
+echo ${keymap} > ${new_etc}/vconsole.conf
+echo "LANG=${locale}" > ${new_etc}/locale.conf
+echo "${locale} UTF-8" > ${new_etc}/locale.gen
+# root and user setup
+$ACM useradd -m -p "" -g users -G ${user_groups} -s /bin/bash ${user_name}
+echo "root:${root_passwd}" | $ACM chpasswd
+$ACM mkinitcpio -p linux
+$ACM locale-gen
+}
+
+# install bootloader
+install_syslinux()
+{
+# Edit syslinux root device
+root_part=$(df | grep -w ${new_arch} | awk {'print $1'})
+sed -i "s|/dev/sda3|$root_part|g" ${new_arch}/boot/syslinux/syslinux.cfg
+$ACM syslinux-install_update -iam
+}
+
+# main
+base_install
+system_conf 
+install_syslinux
+arch_config
