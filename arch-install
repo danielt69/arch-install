@@ -4,25 +4,33 @@
 # 
 # by Mr Green
 #
-#
 
 new_arch=/mnt
-ACM="arch-chroot /mnt"
+ACM="arch-chroot ${new_arch}"
 
-# Set up system variables
-time_zone="Europe/London"
+# Username and passwords
+add_user=true
 user_groups="adm,storage,optical,audio,video,network,wheel,power,lp,log"
 user_name="archuser"
+user_passwd="password"
 root_passwd="password"
-host_name="archlinux
+
+# System settings 
+host_name="archlinux"
 pkgs="syslinux"
 keymap="KEYMAP=uk"
 locale="en_GB.UTF-8"
-
+time_zone="Europe/London"
 # Install required packages
 base_install()
 {
 pacstrap ${new_arch} base ${pkgs}
+}
+
+# New user set up only idf add_user=true
+create_new_user()
+{
+$ACM useradd -m -p ${user_passwd} -g users -G ${user_groups} -s /bin/bash ${user_name}
 }
 
 # configure system
@@ -35,8 +43,7 @@ echo ${host_name} > ${new_etc}/hostname
 echo ${keymap} > ${new_etc}/vconsole.conf
 echo "LANG=${locale}" > ${new_etc}/locale.conf
 echo "${locale} UTF-8" > ${new_etc}/locale.gen
-# root and user setup
-$ACM useradd -m -p "" -g users -G ${user_groups} -s /bin/bash ${user_name}
+[[ ${add_user} == true ]] && create_new_user
 echo "root:${root_passwd}" | $ACM chpasswd
 $ACM mkinitcpio -p linux
 $ACM locale-gen
