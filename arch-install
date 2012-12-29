@@ -1,12 +1,23 @@
 #!/bin/bash
 # arch-install - minimal Arch Linux installer based on arch-install-scripts
 # assumes you have created partitions, filesystems & are they are mounted to new_arch
-# 
+#
 # by Mr Green
 #
 
+# Checks might be a better way to test!
+if [[ $(pacman -Qq arch-install-scripts) != arch-install-scripts ]]; then
+	echo "arch-install-scripts not installed" && exit
+fi
+
+if [ $EUID != 0 ] ; then
+  echo "Must sudo or be root.  Terminating..." >&2
+  exit 1
+fi
+
 new_arch=/mnt
 ACM="arch-chroot ${new_arch}"
+new_etc="${new_arch}/etc"
 
 # Username and passwords
 add_user=true
@@ -15,51 +26,28 @@ user_name="archuser"
 user_passwd="password"
 root_passwd="password"
 
-# System settings 
+# System settings
 host_name="archlinux"
 pkgs="syslinux"
 keymap="KEYMAP=uk"
 locale="en_GB.UTF-8"
 time_zone="Europe/London"
-# Install required packages
-base_install()
-{
+
+# install base
 pacstrap ${new_arch} base ${pkgs}
-}
-
-# New user set up only if add_user=true
-create_new_user()
-{
-$ACM useradd -m -p ${user_passwd} -g users -G ${user_groups} -s /bin/bash ${user_name}
-}
-
-# configure system
-system_conf()
-{
-new_etc="${new_arch}/etc"
 genfstab -p -U ${new_arch} >> ${new_etc}/fstab
 ln -s ${new_arch}/usr/share/zoneinfo/${time_zone} ${new_etc}/localtime
 echo ${host_name} > ${new_etc}/hostname
 echo ${keymap} > ${new_etc}/vconsole.conf
 echo "LANG=${locale}" > ${new_etc}/locale.conf
 echo "${locale} UTF-8" > ${new_etc}/locale.gen
-[[ ${add_user} == true ]] && create_new_user
+if [[ ${add_user} == true ]]; then
+	$ACM useradd -m -p ${user_passwd} -g users -G ${user_groups} -s /bin/bash ${user_name}
+fi
 echo "root:${root_passwd}" | $ACM chpasswd
 $ACM mkinitcpio -p linux
 $ACM locale-gen
-}
-
-# install bootloader
-install_syslinux()
-{
-# Edit syslinux root device
+# install syslinux
 root_part=$(df | grep -w ${new_arch} | awk {'print $1'})
 sed -i "s|/dev/sda3|$root_part|g" ${new_arch}/boot/syslinux/syslinux.cfg
 $ACM syslinux-install_update -iam
-}
-
-# main
-base_install
-system_conf
-install_syslinux
-arch_config
