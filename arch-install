@@ -27,7 +27,7 @@ base_install()
 pacstrap ${new_arch} base ${pkgs}
 }
 
-# New user set up only idf add_user=true
+# New user set up only if add_user=true
 create_new_user()
 {
 $ACM useradd -m -p ${user_passwd} -g users -G ${user_groups} -s /bin/bash ${user_name}
@@ -60,6 +60,6 @@ $ACM syslinux-install_update -iam
 
 # main
 base_install
-system_conf 
+system_conf
 install_syslinux
 arch_config
