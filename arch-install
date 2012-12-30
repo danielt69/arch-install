@@ -43,7 +43,8 @@ echo ${keymap} > ${new_etc}/vconsole.conf
 echo "LANG=${locale}" > ${new_etc}/locale.conf
 echo "${locale} UTF-8" > ${new_etc}/locale.gen
 if [[ ${add_user} == true ]]; then
-	$ACM useradd -m -p "" -g users -G ${user_groups} -s /bin/bash ${user_name}
+	$ACM useradd -m -g users -G ${user_groups} -s /bin/bash ${user_name}
+	echo "${user_name}:${user_password}" | $ACM chpasswd
 fi
 echo "root:${root_passwd}" | $ACM chpasswd
 $ACM mkinitcpio -p linux
