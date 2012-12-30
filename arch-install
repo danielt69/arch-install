@@ -21,6 +21,7 @@ new_etc="${new_arch}/etc"
 
 # Username and passwords
 add_user=true
+wired=true
 user_groups="adm,storage,optical,audio,video,network,wheel,power,lp,log"
 user_name="archuser"
 user_passwd="password"
@@ -47,6 +48,8 @@ fi
 echo "root:${root_passwd}" | $ACM chpasswd
 $ACM mkinitcpio -p linux
 $ACM locale-gen
+# Enable wired network
+[[ ${wired} == true ]] && $ACM /usr/bin/systemctl -f enable dhcpcd.service
 # install syslinux
 root_part=$(df | grep -w ${new_arch} | awk {'print $1'})
 sed -i "s|/dev/sda3|$root_part|g" ${new_arch}/boot/syslinux/syslinux.cfg
