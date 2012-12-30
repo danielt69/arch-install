@@ -29,13 +29,12 @@ root_passwd="password"
 
 # System settings
 host_name="archlinux"
-pkgs="syslinux"
 keymap="KEYMAP=uk"
 locale="en_GB.UTF-8"
 time_zone="Europe/London"
 
-# install base
-pacstrap ${new_arch} base ${pkgs}
+# install base syslinux and packages in package_list
+pacstrap ${new_arch} base syslinux $(<package_list) 
 genfstab -p -U ${new_arch} >> ${new_etc}/fstab
 ln -s ${new_arch}/usr/share/zoneinfo/${time_zone} ${new_etc}/localtime
 echo ${host_name} > ${new_etc}/hostname
