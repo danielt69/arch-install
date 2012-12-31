@@ -49,11 +49,6 @@ echo ${keymap} > ${new_etc}/vconsole.conf
 echo "LANG=${locale}" > ${new_etc}/locale.conf
 echo "${locale} UTF-8" > ${new_etc}/locale.gen
 
-# Add user and set up passwords
-$ACM useradd -m -g users -G ${user_groups} -s /bin/bash ${user_name}
-echo "${user_name}:${user_passwd}" | $ACM chpasswd
-echo "root:${root_passwd}" | $ACM chpasswd
-
 # Install kernel
 $ACM mkinitcpio -p linux
 $ACM locale-gen
@@ -66,9 +61,14 @@ root_part=$(df | grep -w ${new_arch} | awk {'print $1'})
 sed -i "s|/dev/sda3|$root_part|g" ${new_arch}/boot/syslinux/syslinux.cfg
 $ACM syslinux-install_update -iam
 
-# Setup Openbox 
-echo "exec openbox-session" >> ${new_arch}/home/${user_name}/.xinitrc
-mkdir -p ${new_arch}/home/${user_name}/.config/openbox
+# Setup Openbox
+mkdir -p ${new_arch}/etc/skel/.config/openbox
+echo "exec openbox-session" >> ${new_arch}/etc/skel/.xinitrc
 cp ${new_arch}/etc/xdg/openbox/{rc.xml,menu.xml,autostart,environment} \
-	 ${new_arch}/home/${user_name}/.config/openbox
-# change ownership of .config? 
+	 ${new_arch}/etc/skel/.config/openbox
+
+# Add user and set up passwords
+$ACM useradd -m -g users -G ${user_groups} -s /bin/bash ${user_name}
+echo "${user_name}:${user_passwd}" | $ACM chpasswd
+echo "root:${root_passwd}" | $ACM chpasswd
+
