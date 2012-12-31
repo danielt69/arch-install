@@ -67,7 +67,7 @@ sed -i "s|/dev/sda3|$root_part|g" ${new_arch}/boot/syslinux/syslinux.cfg
 $ACM syslinux-install_update -iam
 
 # Setup Openbox 
-echo "exec openbox-session" >> ${new_arch}/home/$user_name}/.xinitrc
+echo "exec openbox-session" >> ${new_arch}/home/${user_name}/.xinitrc
 mkdir -p ${new_arch}/home/${user_name}/.config/openbox
 cp ${new_arch}/etc/xdg/openbox/{rc.xml,menu.xml,autostart,environment} \
 	 ${new_arch}/home/${user_name}/.config/openbox
