@@ -51,7 +51,7 @@ echo "${locale} UTF-8" > ${new_etc}/locale.gen
 
 # Add user and set up passwords
 $ACM useradd -m -g users -G ${user_groups} -s /bin/bash ${user_name}
-echo "${user_name}:${user_password}" | $ACM chpasswd
+echo "${user_name}:${user_passwd}" | $ACM chpasswd
 echo "root:${root_passwd}" | $ACM chpasswd
 
 # Install kernel
@@ -68,7 +68,7 @@ $ACM syslinux-install_update -iam
 
 # Setup Openbox 
 echo "exec openbox-session" >> ${new_arch}/home/$user_name}/.xinitrc
-mkdir -p {new_arch}/home/${user_name}/.config/openbox
+mkdir -p ${new_arch}/home/${user_name}/.config/openbox
 cp ${new_arch}/etc/xdg/openbox/{rc.xml,menu.xml,autostart,environment} \
 	 ${new_arch}/home/${user_name}/.config/openbox
-# check ownership of files...
+# change ownership of .config? 
