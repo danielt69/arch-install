@@ -23,6 +23,7 @@ new_etc="${new_arch}/etc"
 
 # Username and passwords
 wired=true
+aur=true
 user_groups="adm,storage,optical,audio,video,network,wheel,power,lp,log"
 user_name="archuser"
 user_passwd="password"
@@ -35,8 +36,18 @@ locale="en_GB.UTF-8"
 time_zone="Europe/London"
 
 # Install base syslinux and packages in package_list
-pacstrap ${new_arch} base syslinux $(<package_list) 
+pacstrap ${new_arch} base syslinux $(<package_list)
 
+# Install packer is aur true
+if [[ ${aur} == true ]]; then
+	pacstrap ${new_arch} base-devel curl git
+	$ACM curl -O https://aur.archlinux.org/packages/pa/packer/packer.tar.gz
+	$ACM tar -zxvf packer.tar.gz
+	$ACM rm packer.tar.gz
+	$ACM cd packer
+	$ACM makepkg -is --noconfirm --asroot
+fi
+ 
 # Create fstab
 genfstab -p -U ${new_arch} >> ${new_etc}/fstab
 
@@ -77,3 +88,4 @@ echo "root:${root_passwd}" | $ACM chpasswd
 # Remove /etc/skel from ${new_arch}
 # rm -rf ${new_arch}/etc/skel/
 # rmdir ${new_arch}/etc/skel
+
