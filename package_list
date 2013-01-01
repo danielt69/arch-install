@@ -3,5 +3,6 @@ xorg-xinit
 xf86-input-keyboard
 xf86-input-mouse
 xf86-video-vesa
+xorg-fonts-type1
 openbox
 xterm
