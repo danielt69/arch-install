@@ -4,6 +4,7 @@
 #
 # by Mr Green
 #
+script_path=$(readlink -f ${0%/*})
 
 if [ ! -f /usr/bin/pacstrap ]; then
 	echo "arch-install-scripts not installed" && exit
@@ -16,7 +17,7 @@ fi
 
 # Target directories
 new_arch=/mnt
-mkdir -p ${new_arch}
+[ ! -d ${new_arch} ] && mkdir -p ${new_arch}
 ACM="arch-chroot ${new_arch}"
 new_etc="${new_arch}/etc"
 
@@ -48,7 +49,7 @@ EOF
 
 
 # Install base syslinux and packages in package_list
-pacstrap ${new_arch} base syslinux $(<package_list)
+pacstrap ${new_arch} base syslinux $(grep -v "^#" ${script_path}/package_list)
 
 # Install packer is aur true
 [[ ${aur} == true ]] && install_packer
