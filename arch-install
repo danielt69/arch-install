@@ -15,7 +15,9 @@ if [ $EUID != 0 ] ; then
   exit 1
 fi
 
+# Target directories
 new_arch=/mnt
+mkdir -p ${new_arch}
 ACM="arch-chroot ${new_arch}"
 new_etc="${new_arch}/etc"
 
@@ -72,3 +74,6 @@ $ACM useradd -m -g users -G ${user_groups} -s /bin/bash ${user_name}
 echo "${user_name}:${user_passwd}" | $ACM chpasswd
 echo "root:${root_passwd}" | $ACM chpasswd
 
+# Remove /etc/skel from ${new_arch}
+# rm -rf ${new_arch}/etc/skel/
+# rmdir ${new_arch}/etc/skel
