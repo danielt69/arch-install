@@ -1,5 +1,5 @@
 #!/bin/bash
-# arch-install - minimal Arch Linux installer based on arch-install-scripts
+# arch-install - Arch Linux installer using arch-install-scripts
 # assumes you have created partitions, filesystems & are they are mounted to new_arch
 #
 # by Mr Green
@@ -34,19 +34,25 @@ keymap="KEYMAP=uk"
 locale="en_GB.UTF-8"
 time_zone="Europe/London"
 
+install_packer()
+{
+pacstrap ${new_arch} base-devel curl git
+$ACM << EOF
+curl -O https://aur.archlinux.org/packages/pa/packer/packer.tar.gz
+tar -zxvf packer.tar.gz
+rm packer.tar.gz
+cd packer
+makepkg -is --noconfirm --asroot
+EOF 
+}
+
+
 # Install base syslinux and packages in package_list
 pacstrap ${new_arch} base syslinux $(<package_list)
 
 # Install packer is aur true
-if [[ ${aur} == true ]]; then
-	pacstrap ${new_arch} base-devel curl git
-	$ACM curl -O https://aur.archlinux.org/packages/pa/packer/packer.tar.gz
-	$ACM tar -zxvf packer.tar.gz
-	$ACM rm packer.tar.gz
-	$ACM cd packer
-	$ACM makepkg -is --noconfirm --asroot
-fi
- 
+[[ ${aur} == true ]] && install_packer
+
 # Create fstab
 genfstab -p -U ${new_arch} >> ${new_etc}/fstab
 
