@@ -1,8 +1,18 @@
+# Package list
+# add what applications/packages 
+# you need from main repos
+# 
+
+# X server 
 xorg-server
 xorg-xinit
 xf86-input-keyboard
 xf86-input-mouse
 xf86-video-vesa
 xorg-fonts-type1
+
+# Window manager
 openbox
-xterm
+
+# Terminal
+terminal
