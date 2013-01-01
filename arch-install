@@ -5,13 +5,12 @@
 # by Mr Green
 #
 
-# Checks might be a better way to test!
-if [[ $(pacman -Qq arch-install-scripts) != arch-install-scripts ]]; then
+if [ ! -f /usr/bin/pacstrap ]; then
 	echo "arch-install-scripts not installed" && exit
 fi
 
 if [ $EUID != 0 ] ; then
-  echo "Need to run as root.  Terminating..." >&2
+  echo "Please run as root.  Terminating..." >&2
   exit 1
 fi
 
