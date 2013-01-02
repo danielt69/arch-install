@@ -4,8 +4,8 @@
 #
 # by Mr Green
 #
-script_path=$(readlink -f ${0%/*})
 
+# Check for arch-install-scripts and are we running as root
 if [ ! -f /usr/bin/pacstrap ]; then
 	echo "arch-install-scripts not installed" && exit
 fi
@@ -15,21 +15,22 @@ if [ $EUID != 0 ] ; then
   exit 1
 fi
 
-# Target directories
+# Directories variables
 new_arch=/mnt
 [ ! -d ${new_arch} ] && mkdir -p ${new_arch}
 ACM="arch-chroot ${new_arch}"
 new_etc="${new_arch}/etc"
+script_path=$(readlink -f ${0%/*})
 
-# Username and passwords
-wired=true
-aur=true
+# Username, groups and passwords
 user_groups="adm,storage,optical,audio,video,network,wheel,power,lp,log"
 user_name="archuser"
 user_passwd="password"
 root_passwd="password"
 
 # System settings
+wired=true
+aur=true
 host_name="archlinux"
 keymap="KEYMAP=uk"
 locale="en_GB.UTF-8"
@@ -44,54 +45,67 @@ tar -zxvf packer.tar.gz
 rm packer.tar.gz
 cd packer
 makepkg -is --noconfirm --asroot
-EOF 
+EOF
+rm -rf ${new_arch}/packer 
 }
 
 
 # Install base syslinux and packages in package_list
-pacstrap ${new_arch} base syslinux $(grep -v "^#" ${script_path}/package_list)
-
-# Install packer is aur true
+system_setup()
+{
+pacstrap ${new_arch} base $(grep -v "^#" ${script_path}/package_list)
+# Install packer
 [[ ${aur} == true ]] && install_packer
-
-# Create fstab
+# Setup fstab
 genfstab -p -U ${new_arch} >> ${new_etc}/fstab
-
 # Timezone
 ln -s ${new_arch}/usr/share/zoneinfo/${time_zone} ${new_etc}/localtime
-
 # Hostname
 echo ${host_name} > ${new_etc}/hostname
-
 # Locale and keymap
 echo ${keymap} > ${new_etc}/vconsole.conf
 echo "LANG=${locale}" > ${new_etc}/locale.conf
 echo "${locale} UTF-8" > ${new_etc}/locale.gen
-
 # Install kernel
 $ACM mkinitcpio -p linux
 $ACM locale-gen
-
-# Enable wired network
+# Wired Network
 [[ ${wired} == true ]] && $ACM /usr/bin/systemctl -f enable dhcpcd.service
+}
 
-# Bootloader
+# Install syslinux
+bootloader()
+{
 root_part=$(df | grep -w ${new_arch} | awk {'print $1'})
 sed -i "s|/dev/sda3|$root_part|g" ${new_arch}/boot/syslinux/syslinux.cfg
 $ACM syslinux-install_update -iam
+}
 
 # Setup Openbox
+openbox_setup()
+{
 mkdir -p ${new_arch}/etc/skel/.config/openbox
 echo "exec openbox-session" >> ${new_arch}/etc/skel/.xinitrc
 cp ${new_arch}/etc/xdg/openbox/{rc.xml,menu.xml,autostart,environment} \
 	 ${new_arch}/etc/skel/.config/openbox
+}
 
+user_and_root()
+{
 # Add user and set up passwords
 $ACM useradd -m -g users -G ${user_groups} -s /bin/bash ${user_name}
 echo "${user_name}:${user_passwd}" | $ACM chpasswd
 echo "root:${root_passwd}" | $ACM chpasswd
+}
 
+# Main ()
+system_setup
+bootloader
+openbox_setup
+user_and_root
+
+# Clean up
 # Remove /etc/skel from ${new_arch}
-# rm -rf ${new_arch}/etc/skel/
-# rmdir ${new_arch}/etc/skel
+rm -rf ${new_arch}/etc/skel/
+rmdir ${new_arch}/etc/skel
 
