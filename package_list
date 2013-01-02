@@ -16,3 +16,6 @@ openbox
 
 # Terminal
 xfce4-terminal
+
+# Bootloader
+syslinux
