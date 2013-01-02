@@ -15,4 +15,4 @@ xorg-fonts-type1
 openbox
 
 # Terminal
-terminal
+xfce4-terminal
