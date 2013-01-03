@@ -105,7 +105,4 @@ openbox_setup
 user_and_root
 
 # Clean up
-# Remove /etc/skel from ${new_arch}
 rm -rf ${new_arch}/etc/skel/
-rmdir ${new_arch}/etc/skel
-
