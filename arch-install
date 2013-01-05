@@ -61,7 +61,8 @@ genfstab -p -U ${new_arch} >> ${new_etc}/fstab
 # Timezone
 ln -s ${new_arch}/usr/share/zoneinfo/${time_zone} ${new_etc}/localtime
 # Hostname
-echo ${host_name} > ${new_etc}/hostname
+$ACM hostnamectl set-hostname ${host_name}
+#echo ${host_name} > ${new_etc}/hostname
 # Locale and keymap
 echo ${keymap} > ${new_etc}/vconsole.conf
 echo "LANG=${locale}" > ${new_etc}/locale.conf
