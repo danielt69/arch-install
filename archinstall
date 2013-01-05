@@ -1,0 +1,145 @@
+#!/bin/bash
+# archinstall - Arch Linux installer
+# Assumes you have created partitions
+# filesystems & are they are mounted to new_arch
+#
+# by Mr Green
+#
+
+# Test for sudo/root
+[[ $EUID != 0 ]] && echo "Please run as root.  Terminating..." && exit 1
+
+# Directories variables
+new_arch=/mnt
+[ ! -d ${new_arch} ] && mkdir -p ${new_arch}
+# create new ACM command here...
+ACM="chroot ${new_arch}"
+new_etc="${new_arch}/etc"
+script_path=$(readlink -f ${0%/*})
+
+# Username, groups and passwords
+user_groups="adm,storage,optical,audio,video,network,wheel,power,lp,log"
+user_name="arch"
+user_passwd="pass"
+root_passwd="pass"
+# create fstab string 
+# <device> <mount> <filesystem> <settings>
+fstab_file="/dev/sda1 / ext4 defaults 0 1"
+
+# System settings
+wired=false
+aur=false
+host_name="archlinux"
+keymap="KEYMAP=uk"
+locale="en_GB.UTF-8"
+time_zone="Europe/London"
+
+bind_mount()
+{
+mkdir -p ${new_arch}/{sys,proc,dev}
+mount -t sysfs sysfs ${new_arch}/sys
+mount -t proc proc ${new_arch}/proc
+mount -o bind /dev ${new_arch}/dev	
+}
+
+bind_umount()
+{
+	umount -l ${new_arch},{sys,proc,dev}
+}
+
+arch_strap()
+{
+# pacman command here
+arch_pkg=${new_arch}/var/cache/pacman/pkg
+pacman --root ${new_arch} --cachedir ${arch_pkg} --noconfirm --needed -Sy "$@"
+}
+
+# Does exactly what it says
+install_packer()
+{
+archstrap base-devel curl git
+$ACM << EOF
+curl -O https://aur.archlinux.org/packages/pa/packer/packer.tar.gz
+tar -zxvf packer.tar.gz
+rm packer.tar.gz
+cd packer
+makepkg -is --noconfirm --asroot
+EOF
+rm -rf ${new_arch}/packer 
+}
+
+
+# Install base syslinux and packages in package_list
+system_setup()
+{
+	
+bind_mount
+
+# cp resolv to allow us to use pacman under chroot
+cp -L /etc/resolv.conf ${new_arch}/etc/resolv.conf
+# Set pacman directories
+mkdir -p ${new_arch}/var/lib/pacman ${new_arch}/var/cache/pacman/pkg
+
+# install system 
+arch_strap base $(grep -v "^#" ${script_path}/package_list)
+
+# Install packer
+[[ ${aur} == true ]] && install_packer
+
+# Setup fstab
+echo ${fstab_file} >> ${new_arch}/etc/fstab
+
+# Timezone
+ln -s ${new_arch}/usr/share/zoneinfo/${time_zone} ${new_etc}/localtime
+
+# Hostname
+$ACM hostnamectl set-hostname ${host_name}
+
+# Locale and keymap
+echo ${keymap} > ${new_etc}/vconsole.conf
+echo "LANG=${locale}" > ${new_etc}/locale.conf
+echo "${locale} UTF-8" > ${new_etc}/locale.gen
+
+# Install kernel
+$ACM mkinitcpio -p linux
+$ACM locale-gen
+
+# Wired Network
+[[ ${wired} == true ]] && $ACM /usr/bin/systemctl -f enable dhcpcd.service
+
+bind_umount
+}
+
+# Install syslinux
+bootloader()
+{
+root_part=$(df | grep -w ${new_arch} | awk {'print $1'})
+sed -i "s|/dev/sda3|$root_part|g" ${new_arch}/boot/syslinux/syslinux.cfg
+$ACM syslinux-install_update -iam
+}
+
+# Setup Openbox
+openbox_setup()
+{
+mkdir -p ${new_arch}/etc/skel/.config/openbox
+echo "exec openbox-session" >> ${new_arch}/etc/skel/.xinitrc
+cp ${new_arch}/etc/xdg/openbox/{rc.xml,menu.xml,autostart,environment} \
+	 ${new_arch}/etc/skel/.config/openbox
+}
+
+user_and_root()
+{
+# Add user and set up passwords
+$ACM useradd -m -g users -G ${user_groups} -s /bin/bash ${user_name}
+echo "${user_name}:${user_passwd}" | $ACM chpasswd
+echo "root:${root_passwd}" | $ACM chpasswd
+}
+
+# Main ()
+system_setup
+#bootloader
+#openbox_setup
+#user_and_root
+
+# Clean up
+#rm -rf ${new_arch}/etc/skel/
