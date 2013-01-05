@@ -6,6 +6,8 @@
 # by Mr Green
 #
 
+set -x
+
 # Test for sudo/root
 [[ $EUID != 0 ]] && echo "Please run as root.  Terminating..." && exit 1
 
@@ -22,7 +24,8 @@ user_groups="adm,storage,optical,audio,video,network,wheel,power,lp,log"
 user_name="arch"
 user_passwd="pass"
 root_passwd="pass"
-# create fstab string 
+
+# create fstab string possibly replace with user defined one 
 # <device> <mount> <filesystem> <settings>
 fstab_file="/dev/sda1 / ext4 defaults 0 1"
 
@@ -36,7 +39,10 @@ time_zone="Europe/London"
 
 bind_mount()
 {
-mkdir -p ${new_arch}/{sys,proc,dev}
+for f in sys proc dev
+do
+	mkdir -p ${new_arch}/${f}
+done
 mount -t sysfs sysfs ${new_arch}/sys
 mount -t proc proc ${new_arch}/proc
 mount -o bind /dev ${new_arch}/dev	
@@ -44,7 +50,7 @@ mount -o bind /dev ${new_arch}/dev
 
 bind_umount()
 {
-	umount -l ${new_arch},{sys,proc,dev}
+	umount -l ${new_arch}/sys ${new_arch}/proc ${new_arch}/dev
 }
 
 arch_strap()
@@ -75,13 +81,14 @@ system_setup()
 	
 bind_mount
 
-# cp resolv to allow us to use pacman under chroot
-cp -L /etc/resolv.conf ${new_arch}/etc/resolv.conf
 # Set pacman directories
 mkdir -p ${new_arch}/var/lib/pacman ${new_arch}/var/cache/pacman/pkg
-
 # install system 
-arch_strap base $(grep -v "^#" ${script_path}/package_list)
+arch_strap base # $(grep -v "^#" ${script_path}/package_list)
+
+# cp resolv to allow us to use pacman under chroot
+cp -L /etc/resolv.conf ${new_arch}/etc/resolv.conf
+
 
 # Install packer
 [[ ${aur} == true ]] && install_packer
@@ -93,12 +100,18 @@ echo ${fstab_file} >> ${new_arch}/etc/fstab
 ln -s ${new_arch}/usr/share/zoneinfo/${time_zone} ${new_etc}/localtime
 
 # Hostname
-$ACM hostnamectl set-hostname ${host_name}
+echo ${host_name} > ${new_arch}/hostname
 
 # Locale and keymap
 echo ${keymap} > ${new_etc}/vconsole.conf
 echo "LANG=${locale}" > ${new_etc}/locale.conf
 echo "${locale} UTF-8" > ${new_etc}/locale.gen
+
+# Create mirrorlist
+# cp mirrorlist or grab it
+
+# pacman-keys
+# cp over to new install
 
 # Install kernel
 $ACM mkinitcpio -p linux
