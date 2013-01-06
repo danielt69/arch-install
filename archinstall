@@ -68,7 +68,7 @@ bind_umount
 # Does exactly what it says
 install_packer()
 {
-archstrap base-devel curl git
+arch_strap base-devel curl git
 $ACM << EOF
 curl -O https://aur.archlinux.org/packages/pa/packer/packer.tar.gz
 tar -zxvf packer.tar.gz
