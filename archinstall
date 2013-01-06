@@ -29,7 +29,6 @@ root_passwd="pass"
 fstab_file="/dev/sda1 / ext4 defaults 0 1"
 
 # System settings
-ACM="chroot ${new_arch}"
 wired=false
 aur=false
 host_name="archlinux"
@@ -49,6 +48,7 @@ bind_umount()
 umount -l ${new_arch}/sys ${new_arch}/proc ${new_arch}/dev
 }
 
+# Chroot function
 archroot()
 {
 bind_mount
@@ -59,7 +59,6 @@ bind_umount
 arch_strap()
 {
 bind_mount
-# pacman command here
 arch_pkg=${new_arch}/var/cache/pacman/pkg
 pacman --root ${new_arch} --cachedir ${arch_pkg} --noconfirm --needed -Sy "$@"
 bind_umount
@@ -69,7 +68,7 @@ bind_umount
 install_packer()
 {
 arch_strap base-devel curl git
-$ACM << EOF
+archroot << EOF
 curl -O https://aur.archlinux.org/packages/pa/packer/packer.tar.gz
 tar -zxvf packer.tar.gz
 rm packer.tar.gz
@@ -80,7 +79,7 @@ rm -rf ${new_arch}/packer
 }
 
 
-# Install base syslinux and packages in package_list
+# Install base and packages from package_list
 system_setup()
 {
 # Set pacman directories
@@ -144,9 +143,9 @@ cp ${new_arch}/etc/xdg/openbox/{rc.xml,menu.xml,autostart,environment} \
 user_and_root()
 {
 # Add user and set up passwords
-$ACM useradd -m -g users -G ${user_groups} -s /bin/bash ${user_name}
-echo "${user_name}:${user_passwd}" | $ACM chpasswd
-echo "root:${root_passwd}" | $ACM chpasswd
+archroot useradd -m -g users -G ${user_groups} -s /bin/bash ${user_name}
+echo "${user_name}:${user_passwd}" | archroot chpasswd
+echo "root:${root_passwd}" | archroot chpasswd
 }
 
 # Main ()
