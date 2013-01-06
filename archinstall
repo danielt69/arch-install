@@ -6,8 +6,6 @@
 # by Mr Green
 #
 
-set -x
-
 # Test for sudo/root
 [[ $EUID != 0 ]] && echo "Please run as root.  Terminating..." && exit 1
 
@@ -29,8 +27,8 @@ root_passwd="pass"
 fstab_file="/dev/sda1 / ext4 defaults 0 1"
 
 # System settings
-wired=false
-aur=false
+wired=true
+aur=true
 host_name="archlinux"
 keymap="KEYMAP=uk"
 locale="en_GB.UTF-8"
@@ -67,7 +65,7 @@ bind_umount
 # Does exactly what it says
 install_packer()
 {
-arch_strap base-devel curl git
+arch_strap base-devel curl git jansson jshon
 archroot << EOF
 curl -O https://aur.archlinux.org/packages/pa/packer/packer.tar.gz
 tar -zxvf packer.tar.gz
@@ -86,7 +84,7 @@ system_setup()
 mkdir -m 0755 -p ${new_arch}/var/{cache/pacman/pkg,lib/pacman,log}
 
 # install system
-arch_strap base # $(grep -v "^#" ${script_path}/package_list)
+arch_strap base $(grep -v "^#" ${script_path}/package_list)
 
 # cp resolv to allow us to use pacman under chroot
 cp -L /etc/resolv.conf ${new_arch}/etc/resolv.conf
@@ -128,7 +126,7 @@ bootloader()
 {
 root_part=$(df | grep -w ${new_arch} | awk {'print $1'})
 sed -i "s|/dev/sda3|$root_part|g" ${new_arch}/boot/syslinux/syslinux.cfg
-$ACM syslinux-install_update -iam
+archroot syslinux-install_update -iam
 }
 
 # Setup Openbox
@@ -150,9 +148,9 @@ echo "root:${root_passwd}" | archroot chpasswd
 
 # Main ()
 system_setup
-#bootloader
-#openbox_setup
-#user_and_root
+bootloader
+openbox_setup
+user_and_root
 
 # Clean up
-#rm -rf ${new_arch}/etc/skel/
+rm -rf ${new_arch}/etc/skel/
