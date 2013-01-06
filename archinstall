@@ -39,10 +39,7 @@ time_zone="Europe/London"
 
 bind_mount()
 {
-for f in sys proc dev
-do
-	mkdir -p ${new_arch}/${f}
-done
+mkdir -p ${new_arch}/{sys,proc,dev}
 mount -t sysfs sysfs ${new_arch}/sys
 mount -t proc proc ${new_arch}/proc
 mount -o bind /dev ${new_arch}/dev	
@@ -78,17 +75,16 @@ rm -rf ${new_arch}/packer
 # Install base syslinux and packages in package_list
 system_setup()
 {
-	
+
 bind_mount
 
 # Set pacman directories
-mkdir -p ${new_arch}/var/lib/pacman ${new_arch}/var/cache/pacman/pkg
+mkdir -m 0755 -p ${new_arch}/var/{cache/pacman/pkg,lib/pacman,log}
 # install system 
 arch_strap base # $(grep -v "^#" ${script_path}/package_list)
 
 # cp resolv to allow us to use pacman under chroot
 cp -L /etc/resolv.conf ${new_arch}/etc/resolv.conf
-
 
 # Install packer
 [[ ${aur} == true ]] && install_packer
@@ -107,11 +103,11 @@ echo ${keymap} > ${new_etc}/vconsole.conf
 echo "LANG=${locale}" > ${new_etc}/locale.conf
 echo "${locale} UTF-8" > ${new_etc}/locale.gen
 
-# Create mirrorlist
-# cp mirrorlist or grab it
+# Copy host mirrorlist
+cp -a /etc/pacman.d/mirrorlist ${new_arch}/etc/pacman.d/
 
-# pacman-keys
-# cp over to new install
+# Copy host keys
+cp -a /etc/pacman.d/gnupg ${new_arch}/etc/pacman.d/
 
 # Install kernel
 $ACM mkinitcpio -p linux
