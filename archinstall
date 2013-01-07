@@ -22,10 +22,6 @@ user_name="arch"
 user_passwd="pass"
 root_passwd="pass"
 
-# create fstab string possibly replace with user defined one
-# <device> <mount> <filesystem> <settings>
-fstab_file="/dev/sda1 / ext4 defaults 0 1"
-
 # System settings
 wired=true
 aur=true
@@ -93,7 +89,7 @@ cp -L /etc/resolv.conf ${new_arch}/etc/resolv.conf
 [[ ${aur} == true ]] && install_packer
 
 # Setup fstab
-echo ${fstab_file} >> ${new_arch}/etc/fstab
+cp ${script_path}/fstab_file ${new_arch}/etc/fstab
 
 # Timezone
 ln -s ${new_arch}/usr/share/zoneinfo/${time_zone} ${new_etc}/localtime
@@ -144,6 +140,8 @@ user_and_root()
 archroot useradd -m -g users -G ${user_groups} -s /bin/bash ${user_name}
 echo "${user_name}:${user_passwd}" | archroot chpasswd
 echo "root:${root_passwd}" | archroot chpasswd
+# Clean up
+rm -rf ${new_arch}/etc/skel/
 }
 
 # Main ()
@@ -152,5 +150,3 @@ bootloader
 openbox_setup
 user_and_root
 
-# Clean up
-rm -rf ${new_arch}/etc/skel/
