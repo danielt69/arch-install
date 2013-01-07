@@ -1,0 +1,5 @@
+# fstab
+# 
+# <file system>  <dir>  <type>  <options>  <dump> <pass>
+ /dev/sda1        /     ext4    defaults    0      1
+
