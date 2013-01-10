@@ -16,7 +16,7 @@ Configures:
 
 Enable wired network connection [dhcp].
 
-Sets up basic config files in /etc.
+Set up basic config files in /etc.
 
 Create a new user, new home directory set password.
 
