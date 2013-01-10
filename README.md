@@ -6,15 +6,15 @@ Simple bash Arch install script
 Usage:
 ======
 
-You will need to have partitioned your drive, created filesystems and mounting them to 'new_arch' [set as /mnt by default]. Edited fstab_file to reflect your 
+You need to have partitioned your drive, created filesystems and mounting them to 'new_arch' [set as /mnt by default]. Edited fstab_file to reflect your 
 system set up. 
 
-Currently archinstall will install by default base, syslinux, X server, Openbox and packer.
+Currently archinstall will install by default base, syslinux, X server, Openbox and packer [optional].
 
 Configures:
 ===========
 
-Enable wired network connection [dhcp].
+Enable wired network connection [optional].
 
 Set up basic config files in /etc.
 
